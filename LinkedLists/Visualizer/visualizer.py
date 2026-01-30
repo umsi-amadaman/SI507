@@ -220,24 +220,9 @@ with tab1:
     snapshots = create_append_demo()
     step = st.session_state.append_step
     
-    col1, col2, col3 = st.columns([1, 1, 4])
-    with col1:
-        if st.button("← Previous", disabled=(step == 0), key="append_prev"):
-            st.session_state.append_step -= 1
-            st.rerun()
-    with col2:
-        if st.button("Next →", disabled=(step == len(snapshots)-1), key="append_next"):
-            st.session_state.append_step += 1
-            st.rerun()
-    with col3:
-        if st.button("Reset", key="append_reset"):
-            st.session_state.append_step = 0
-            st.rerun()
+    code_col, viz_col = st.columns([1, 2])
     
-    st.markdown(f"**Step {step + 1} of {len(snapshots)}**")
-    st.markdown(render_snapshot(snapshots[step], "week"), unsafe_allow_html=True)
-    
-    with st.expander("Full append() method", expanded=True):
+    with code_col:
         st.code('''def append(self, data):
     new_node = Node(data)
     
@@ -246,13 +231,31 @@ with tab1:
         self.head = new_node
         return
     
-    # Traverse to find the last node
+    # Traverse to find last node
     current = self.head
     while current.next:
         current = current.next
     
-    # Link the last node to the new node
+    # Link last node to new node
     current.next = new_node''', language='python')
+    
+    with viz_col:
+        col1, col2, col3 = st.columns([1, 1, 3])
+        with col1:
+            if st.button("← Previous", disabled=(step == 0), key="append_prev"):
+                st.session_state.append_step -= 1
+                st.rerun()
+        with col2:
+            if st.button("Next →", disabled=(step == len(snapshots)-1), key="append_next"):
+                st.session_state.append_step += 1
+                st.rerun()
+        with col3:
+            if st.button("Reset", key="append_reset"):
+                st.session_state.append_step = 0
+                st.rerun()
+        
+        st.markdown(f"**Step {step + 1} of {len(snapshots)}**")
+        st.markdown(render_snapshot(snapshots[step], "week"), unsafe_allow_html=True)
 
 
 # ===================== REPLACE TAB =====================
@@ -265,41 +268,45 @@ with tab2:
     snapshots = create_replace_demo()
     step = st.session_state.replace_step
     
-    col1, col2, col3 = st.columns([1, 1, 4])
-    with col1:
-        if st.button("← Previous", disabled=(step == 0), key="replace_prev"):
-            st.session_state.replace_step -= 1
-            st.rerun()
-    with col2:
-        if st.button("Next →", disabled=(step == len(snapshots)-1), key="replace_next"):
-            st.session_state.replace_step += 1
-            st.rerun()
-    with col3:
-        if st.button("Reset", key="replace_reset"):
-            st.session_state.replace_step = 0
-            st.rerun()
+    code_col, viz_col = st.columns([1, 2])
     
-    st.markdown(f"**Step {step + 1} of {len(snapshots)}**")
-    st.markdown(render_snapshot(snapshots[step], "week"), unsafe_allow_html=True)
-    
-    with st.expander("Full replace() method", expanded=True):
+    with code_col:
         st.code('''def replace(self, old_data, new_data):
     new_node = Node(new_data)
     
-    # Special case: replacing the head
+    # Special case: replacing head
     if self.head.data == old_data:
         new_node.next = self.head.next
         self.head = new_node
         return
     
-    # Find the node BEFORE the one we want to replace
+    # Find node BEFORE target
     current = self.head
-    while current.next and current.next.data != old_data:
+    while current.next and \\
+          current.next.data != old_data:
         current = current.next
     
     # Rewire the pointers
     new_node.next = current.next.next
     current.next = new_node''', language='python')
+    
+    with viz_col:
+        col1, col2, col3 = st.columns([1, 1, 3])
+        with col1:
+            if st.button("← Previous", disabled=(step == 0), key="replace_prev"):
+                st.session_state.replace_step -= 1
+                st.rerun()
+        with col2:
+            if st.button("Next →", disabled=(step == len(snapshots)-1), key="replace_next"):
+                st.session_state.replace_step += 1
+                st.rerun()
+        with col3:
+            if st.button("Reset", key="replace_reset"):
+                st.session_state.replace_step = 0
+                st.rerun()
+        
+        st.markdown(f"**Step {step + 1} of {len(snapshots)}**")
+        st.markdown(render_snapshot(snapshots[step], "week"), unsafe_allow_html=True)
 
 st.markdown("---")
 st.markdown("*SI 507 - Intermediate Programming*")
