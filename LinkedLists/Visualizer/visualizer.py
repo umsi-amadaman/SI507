@@ -21,7 +21,7 @@ def render_snapshot(snap: Snapshot):
     css = """
     <style>
     .ll-container { display: flex; align-items: center; gap: 0; margin: 20px 0; font-family: monospace; }
-    .node-box { border: 3px solid #333; border-radius: 8px; padding: 15px 20px; background: white; min-width: 80px; text-align: center; position: relative; font-size: 14px; }
+    .node-box {color: #333; border: 3px solid #333; border-radius: 8px; padding: 15px 20px; background: white; min-width: 80px; text-align: center; position: relative; font-size: 14px; }
     .node-box.highlight-current { border-color: #e63946; background: #fff0f0; box-shadow: 0 0 10px rgba(230, 57, 70, 0.4); }
     .node-box.highlight-newnode { border-color: #2a9d8f; background: #f0fff0; box-shadow: 0 0 10px rgba(42, 157, 143, 0.4); }
     .arrow { font-size: 24px; color: #333; margin: 0 5px; }
