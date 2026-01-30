@@ -112,7 +112,7 @@ def create_replace_demo():
 
 
 # Main app
-st.title("🔗 Linked List Visualizer")
+st.title("Linked List Visualizer")
 st.markdown("*Step through a replace operation to see pointer chasing in action*")
 
 snapshots = create_replace_demo()
@@ -131,7 +131,7 @@ with col2:
 st.markdown(f"**Step {step + 1} of {len(snapshots)}**")
 st.markdown(render_snapshot(snapshots[step]), unsafe_allow_html=True)
 
-with st.expander("📝 Full replace() method"):
+with st.expander("Full replace() method"):
     st.code('''def replace(self, old_data, new_data):
     new_node = Node(new_data)
     
