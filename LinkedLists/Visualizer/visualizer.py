@@ -32,8 +32,8 @@ def render_snapshot(snap: Snapshot, list_var: str = "week"):
     .floating-node { display: flex; align-items: center; margin-top: 20px; gap: 10px; }
     .floating-label { color: #2a9d8f; font-weight: bold; font-family: monospace; }
     .code-line { background: #2d2d2d; color: #f8f8f2; padding: 10px 15px; border-radius: 5px; font-family: monospace; font-size: 14px; margin: 10px 0; }
-    .explanation { background: #f0f7ff; border-left: 4px solid #3b82f6; padding: 10px 15px; margin: 10px 0; }
-    .head-label { font-size: 12px; color: #666; margin-bottom: 5px; font-family: monospace; }
+    .explanation { background: #f0f7ff; border-left: 4px solid #3b82f6; padding: 10px 15px; margin: 10px 0; cursor: pointer; }
+    .explanation summary { font-weight: bold; color: #3b82f6; }    .head-label { font-size: 12px; color: #666; margin-bottom: 5px; font-family: monospace; }
     </style>
     """
     html = [css, f'<div class="head-label">{list_var}.head</div>', '<div class="ll-container">']
@@ -65,7 +65,10 @@ def render_snapshot(snap: Snapshot, list_var: str = "week"):
     if snap.code_line:
         html.append(f'<div class="code-line">{snap.code_line}</div>')
     if snap.explanation:
-        html.append(f'<div class="explanation">{snap.explanation}</div>')
+        html.append(f'''<details class="explanation">
+        <summary>Click to check your interpretation</summary>
+        {snap.explanation}
+    </details>''')
     
     return "".join(html)
 
