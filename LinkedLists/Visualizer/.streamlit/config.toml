@@ -1,0 +1,11 @@
+[theme]
+base = "light"
+```
+
+So your structure is:
+```
+visualizer/
+  .streamlit/
+    config.toml
+  streamlit_app.py
+  requirements.txt
