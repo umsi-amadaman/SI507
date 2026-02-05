@@ -84,39 +84,177 @@ def insert_dict(node: Dict, val: int) -> None:
 # CODE TRACING: GRAPHICAL TREE RENDERING
 # ============================================================
 
-def calculate_positions(node, x, y, x_offset, positions):
+def get_tree_depth(node):
+    """Calculate the maximum depth of the tree."""
+    if node is None:
+        return 0
+    return 1 + max(get_tree_depth(node.left), get_tree_depth(node.right))
+
+
+def calculate_positions(node, depth, left_bound, right_bound, positions):
+    """
+    Calculate node positions using a proper binary tree layout.
+    Each node is centered between its bounds, children split the space.
+    """
     if node is None:
         return
-    positions[node.value] = (x, y)
-    next_offset = x_offset * 0.55
-    calculate_positions(node.left, x - x_offset, y + 1, next_offset, positions)
-    calculate_positions(node.right, x + x_offset, y + 1, next_offset, positions)
+    x = (left_bound + right_bound) / 2
+    positions[node.value] = (x, depth)
+    # Left child gets left half, right child gets right half
+    calculate_positions(node.left, depth + 1, left_bound, x, positions)
+    calculate_positions(node.right, depth + 1, x, right_bound, positions)
 
 
 def render_bst_snapshot(snap: BSTSnapshot, tree_var: str = "bst") -> str:
     css = """
     <style>
-    .bst-container { position: relative; width: 100%; height: 400px; margin: 20px 0; font-family: monospace; background: #fafafa; border-radius: 8px; overflow: hidden; }
-    .bst-node { position: absolute; width: 50px; height: 50px; border: 3px solid #333; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; transform: translate(-50%, -50%); z-index: 2; color: #333; }
-    .bst-node.highlight-current { border-color: #e63946; background: #fff0f0; box-shadow: 0 0 15px rgba(230, 57, 70, 0.5); }
-    .bst-node.highlight-newnode { border-color: #2a9d8f; background: #f0fff0; box-shadow: 0 0 15px rgba(42, 157, 143, 0.5); }
-    .bst-node.highlight-found { border-color: #3b82f6; background: #f0f7ff; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
-    .bst-node.highlight-path { border-color: #f59e0b; background: #fffbeb; }
-    .bst-node.highlight-target { border-color: #8b5cf6; background: #f5f3ff; box-shadow: 0 0 15px rgba(139, 92, 246, 0.5); }
-    .bst-edge { position: absolute; background: #666; height: 2px; transform-origin: left center; z-index: 1; }
-    .node-label { position: absolute; font-size: 11px; font-weight: bold; transform: translate(-50%, 0); white-space: nowrap; }
-    .node-label.current { color: #e63946; top: -20px; }
-    .node-label.newnode { color: #2a9d8f; top: -20px; }
-    .node-label.found { color: #3b82f6; top: -20px; }
-    .floating-node-container { display: flex; align-items: center; gap: 10px; margin: 15px 0; padding: 10px; background: #f0fff0; border-radius: 8px; border: 2px dashed #2a9d8f; }
-    .floating-label { color: #2a9d8f; font-weight: bold; font-family: monospace; }
-    .floating-node { width: 50px; height: 50px; border: 3px solid #2a9d8f; border-radius: 50%; background: #f0fff0; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; font-family: monospace; color: #333; }
-    .comparison-box { background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 10px 15px; margin: 10px 0; font-family: monospace; font-size: 16px; text-align: center; }
-    .code-line { background: #2d2d2d; color: #f8f8f2; padding: 10px 15px; border-radius: 5px; font-family: monospace; font-size: 14px; margin: 10px 0; }
-    .explanation { background: #f0f7ff; border-left: 4px solid #3b82f6; padding: 10px 15px; margin: 10px 0; cursor: pointer; }
-    .explanation summary { font-weight: bold; color: #3b82f6; }
-    .tree-label { font-size: 12px; color: #666; margin-bottom: 5px; font-family: monospace; }
-    .empty-tree { display: flex; align-items: center; justify-content: center; height: 100%; color: #888; font-style: italic; }
+    .bst-container { 
+        position: relative; 
+        width: 100%; 
+        height: 420px; 
+        margin: 20px 0; 
+        font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        border-radius: 12px; 
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+    }
+    .bst-node { 
+        position: absolute; 
+        width: 52px; 
+        height: 52px; 
+        border: 3px solid #334155; 
+        border-radius: 50%; 
+        background: white; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        font-size: 17px; 
+        font-weight: 600; 
+        transform: translate(-50%, -50%); 
+        z-index: 10; 
+        color: #1e293b;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.2s ease;
+    }
+    .bst-node.highlight-current { 
+        border-color: #dc2626; 
+        background: #fef2f2; 
+        box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.2), 0 4px 12px rgba(220, 38, 38, 0.3); 
+    }
+    .bst-node.highlight-newnode { 
+        border-color: #7c3aed; 
+        background: #f5f3ff; 
+        box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.2), 0 4px 12px rgba(124, 58, 237, 0.3); 
+    }
+    .bst-node.highlight-found { 
+        border-color: #059669; 
+        background: #ecfdf5; 
+        box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.2), 0 4px 12px rgba(5, 150, 105, 0.3); 
+    }
+    .bst-node.highlight-path { 
+        border-color: #f59e0b; 
+        background: #fffbeb; 
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+    }
+    .bst-node.highlight-target { 
+        border-color: #8b5cf6; 
+        background: #f5f3ff; 
+        box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2), 0 4px 12px rgba(139, 92, 246, 0.3); 
+    }
+    .bst-edge { 
+        position: absolute; 
+        background: #94a3b8; 
+        height: 2px; 
+        transform-origin: 0% 50%; 
+        z-index: 1; 
+    }
+    .node-label { 
+        position: absolute; 
+        font-size: 11px; 
+        font-weight: 700; 
+        transform: translate(-50%, 0); 
+        white-space: nowrap;
+        letter-spacing: 0.02em;
+        text-transform: lowercase;
+    }
+    .node-label.current { color: #dc2626; top: -22px; }
+    .node-label.newnode { color: #7c3aed; top: -22px; }
+    .node-label.found { color: #059669; top: -22px; }
+    .floating-node-container { 
+        display: flex; 
+        align-items: center; 
+        gap: 12px; 
+        margin: 15px 0; 
+        padding: 12px 16px; 
+        background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+        border-radius: 10px; 
+        border: 2px dashed #8b5cf6; 
+    }
+    .floating-label { color: #6d28d9; font-weight: 600; font-family: 'SF Mono', monospace; }
+    .floating-node { 
+        width: 50px; 
+        height: 50px; 
+        border: 3px solid #7c3aed; 
+        border-radius: 50%; 
+        background: white; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        font-size: 17px; 
+        font-weight: 600; 
+        font-family: 'SF Mono', monospace; 
+        color: #1e293b;
+        box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
+    }
+    .comparison-box { 
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border: 2px solid #f59e0b; 
+        border-radius: 10px; 
+        padding: 12px 18px; 
+        margin: 12px 0; 
+        font-family: 'SF Mono', monospace; 
+        font-size: 15px; 
+        font-weight: 600;
+        text-align: center;
+        color: #92400e;
+    }
+    .code-line { 
+        background: #1e293b; 
+        color: #e2e8f0; 
+        padding: 12px 18px; 
+        border-radius: 8px; 
+        font-family: 'SF Mono', 'Fira Code', monospace; 
+        font-size: 14px; 
+        margin: 12px 0;
+        border-left: 4px solid #3b82f6;
+    }
+    .explanation { 
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-left: 4px solid #3b82f6; 
+        padding: 12px 18px; 
+        margin: 12px 0; 
+        cursor: pointer;
+        border-radius: 0 8px 8px 0;
+    }
+    .explanation summary { font-weight: 600; color: #1d4ed8; }
+    .explanation p { margin: 8px 0 0 0; color: #334155; }
+    .tree-label { 
+        font-size: 13px; 
+        color: #64748b; 
+        margin-bottom: 8px; 
+        font-family: 'SF Mono', monospace;
+        font-weight: 500;
+    }
+    .empty-tree { 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        height: 100%; 
+        color: #94a3b8; 
+        font-style: italic;
+        font-size: 15px;
+    }
     </style>
     """
     
@@ -126,50 +264,75 @@ def render_bst_snapshot(snap: BSTSnapshot, tree_var: str = "bst") -> str:
         html.append('<div class="empty-tree">None (empty tree)</div>')
     else:
         positions = {}
-        calculate_positions(snap.tree, 0.5, 0, 0.22, positions)
-        html.append(draw_edges(snap.tree, positions))
-        html.append(draw_nodes(snap.tree, positions, snap.highlighted_nodes))
+        tree_depth = get_tree_depth(snap.tree)
+        calculate_positions(snap.tree, 0, 0.05, 0.95, positions)  # Leave 5% margin on each side
+        html.append(draw_edges(snap.tree, positions, tree_depth))
+        html.append(draw_nodes(snap.tree, positions, snap.highlighted_nodes, tree_depth))
     
     html.append('</div>')
     
     if snap.floating_node is not None:
-        html.append(f'<div class="floating-node-container"><span class="floating-label">new_node =</span><div class="floating-node">{snap.floating_node}</div><span style="color: #666; font-family: monospace;">(not yet in tree)</span></div>')
+        html.append(f'<div class="floating-node-container"><span class="floating-label">new_node =</span><div class="floating-node">{snap.floating_node}</div><span style="color: #64748b; font-family: monospace; font-size: 13px;">(not yet in tree)</span></div>')
     
     if snap.comparison_text:
         html.append(f'<div class="comparison-box">{snap.comparison_text}</div>')
     if snap.code_line:
         html.append(f'<div class="code-line">{snap.code_line}</div>')
     if snap.explanation:
-        html.append(f'<details class="explanation"><summary>Click to check your interpretation</summary>{snap.explanation}</details>')
+        html.append(f'<details class="explanation"><summary>💡 Click to check your understanding</summary><p>{snap.explanation}</p></details>')
     
     return "".join(html)
 
 
-def draw_edges(node, positions, parent_pos=None):
+def draw_edges(node, positions, tree_depth, parent_pos=None):
+    """Draw edges between nodes using proper pixel calculations."""
     if node is None:
         return ""
     import math
     html = []
     node_pos = positions[node.value]
+    
+    # Calculate vertical spacing based on tree depth
+    container_height = 420
+    vertical_padding = 50
+    usable_height = container_height - (2 * vertical_padding)
+    level_height = usable_height / max(tree_depth, 1)
+    
     if parent_pos is not None:
-        px1, py1 = parent_pos[0] * 100, parent_pos[1] * 70 + 40
-        px2, py2 = node_pos[0] * 100, node_pos[1] * 70 + 40
-        dx, dy = px2 - px1, py2 - py1
-        length = math.sqrt(dx*dx + dy*dy)
-        angle = math.degrees(math.atan2(dy, dx))
-        html.append(f'<div class="bst-edge" style="left: {px1}%; top: {py1}px; width: {length}%; transform: rotate({angle}deg);"></div>')
-    html.append(draw_edges(node.left, positions, node_pos))
-    html.append(draw_edges(node.right, positions, node_pos))
+        # Convert positions to pixels
+        # x is a fraction (0-1), y is the level (0, 1, 2...)
+        px1 = parent_pos[0] * 100  # percentage
+        py1 = vertical_padding + parent_pos[1] * level_height
+        px2 = node_pos[0] * 100  # percentage  
+        py2 = vertical_padding + node_pos[1] * level_height
+        
+        # Use SVG for cleaner lines
+        html.append(f'''<svg style="position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:1;">
+            <line x1="{px1}%" y1="{py1}px" x2="{px2}%" y2="{py2}px" 
+                  stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+        </svg>''')
+    
+    html.append(draw_edges(node.left, positions, tree_depth, node_pos))
+    html.append(draw_edges(node.right, positions, tree_depth, node_pos))
     return "".join(html)
 
 
-def draw_nodes(node, positions, highlighted):
+def draw_nodes(node, positions, highlighted, tree_depth):
+    """Draw nodes at calculated positions with proper highlights."""
     if node is None:
         return ""
     html = []
     x, y = positions[node.value]
+    
+    # Calculate vertical spacing based on tree depth
+    container_height = 420
+    vertical_padding = 50
+    usable_height = container_height - (2 * vertical_padding)
+    level_height = usable_height / max(tree_depth, 1)
+    
     classes = ["bst-node"]
     labels = []
+    
     if node.value in highlighted.get("current", []):
         classes.append("highlight-current")
         labels.append('<span class="node-label current">current ↓</span>')
@@ -183,11 +346,12 @@ def draw_nodes(node, positions, highlighted):
         classes.append("highlight-path")
     if node.value in highlighted.get("target", []):
         classes.append("highlight-target")
+    
     left_pct = x * 100
-    top_px = y * 70 + 40
+    top_px = vertical_padding + y * level_height
     html.append(f'<div class="{" ".join(classes)}" style="left: {left_pct}%; top: {top_px}px;">{"".join(labels)}{node.value}</div>')
-    html.append(draw_nodes(node.left, positions, highlighted))
-    html.append(draw_nodes(node.right, positions, highlighted))
+    html.append(draw_nodes(node.left, positions, highlighted, tree_depth))
+    html.append(draw_nodes(node.right, positions, highlighted, tree_depth))
     return "".join(html)
 
 
